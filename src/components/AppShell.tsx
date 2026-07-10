@@ -1,5 +1,6 @@
 import { useCallback, useState, type ReactNode } from "react";
 import { useDevice } from "../context/DeviceContext";
+import { getSerialUnsupportedReason } from "../lib/browserSupport";
 import { Terminal } from "./Terminal";
 import "./AppShell.css";
 
@@ -130,12 +131,7 @@ export function AppShell({ activeSection, onNavigate, children }: AppShellProps)
 
           {mode === "serial" ? (
             <>
-              {!isSupported && (
-                <p className="shell__device-warning">
-                  Web Serial unsupported here. On Android this needs Chrome 148+ on select devices — try Wireless
-                  mode instead.
-                </p>
-              )}
+              {!isSupported && <p className="shell__device-warning">{getSerialUnsupportedReason()}</p>}
               {connectError && <p className="shell__device-warning">{connectError}</p>}
               <button
                 type="button"

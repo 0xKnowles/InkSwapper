@@ -2,6 +2,7 @@ import { useCallback, useState } from "react";
 import type { FirmwareEntry } from "../../types";
 import { FIRMWARE_CATALOG } from "../../data/firmwareCatalog";
 import { useDevice } from "../../context/DeviceContext";
+import { getSerialUnsupportedReason } from "../../lib/browserSupport";
 import { FirmwareCard } from "../FirmwareCard";
 import "./Step1SelectConnect.css";
 
@@ -88,12 +89,7 @@ export function Step1SelectConnect({ selectedFirmware, onSelectFirmware, onCompl
       </div>
 
       <div className="step1__connect-panel">
-        {mode === "serial" && !isSupported && (
-          <p className="step1__warning">
-            This browser does not expose the Web Serial API. On Android, native USB serial support is very new and
-            limited to a handful of devices — switch to Wireless mode in the sidebar instead.
-          </p>
-        )}
+        {mode === "serial" && !isSupported && <p className="step1__warning">{getSerialUnsupportedReason()}</p>}
 
         <div className="step1__connect-row">
           {alreadyConnected ? (
