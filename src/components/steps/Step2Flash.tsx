@@ -21,7 +21,7 @@ const IDLE_PROGRESS: FlashProgress = { percent: 0, phase: "Idle", bytesWritten: 
 
 export function Step2Flash({ firmware, onComplete }: Step2Props) {
   const { status: releaseStatus, release, error: releaseError } = useGitHubRelease(firmware);
-  const { mode, flash, log } = useDevice();
+  const { flash, log } = useDevice();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [eraseFlash, setEraseFlash] = useState(false);
@@ -74,7 +74,7 @@ export function Step2Flash({ firmware, onComplete }: Step2Props) {
     setIsFlashing(true);
 
     try {
-      log(`Starting flash routine over ${mode === "serial" ? "USB serial (esptool-js)" : "Wi-Fi (OTA)"} with ${source.label}…`, "command");
+      log(`Starting flash routine over USB serial (esptool-js) with ${source.label}…`, "command");
       await flash({ bytes: source.bytes, eraseFlash, onProgress: setProgress });
 
       log(`${firmware.name} flashed successfully.`, "success");
@@ -86,15 +86,14 @@ export function Step2Flash({ firmware, onComplete }: Step2Props) {
     } finally {
       setIsFlashing(false);
     }
-  }, [eraseFlash, firmware.name, flash, log, mode, source]);
+  }, [eraseFlash, firmware.name, flash, log, source]);
 
   return (
     <div className="step2">
       <h2 className="step2__heading">Flash {firmware.name} to device</h2>
       <p className="step2__subheading">
-        {mode === "serial"
-          ? "Write the firmware image over USB serial using esptool-js — fetched from the resolved GitHub release, or uploaded directly from your machine."
-          : "Write the firmware image over Wi-Fi (OTA) — fetched from the resolved GitHub release, or uploaded directly from your machine."}
+        Write the firmware image over USB serial using esptool-js — fetched from the resolved GitHub release, or
+        uploaded directly from your machine.
       </p>
 
       <div className="step2__source-panel">

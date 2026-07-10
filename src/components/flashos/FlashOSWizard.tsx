@@ -5,6 +5,7 @@ import { StepHeader } from "../StepHeader";
 import { Step1SelectConnect } from "../steps/Step1SelectConnect";
 import { Step2Flash } from "../steps/Step2Flash";
 import { Step3Restore } from "../steps/Step3Restore";
+import "./FlashOSWizard.css";
 
 interface WizardState {
   step: WizardStep;
@@ -24,7 +25,7 @@ const INITIAL_STATE: WizardState = {
  * from DeviceContext rather than owning its own transport.
  */
 export function FlashOSWizard() {
-  const { log, clearLog } = useDevice();
+  const { supportsFlashWizard, log, clearLog } = useDevice();
   const [state, setState] = useState<WizardState>(INITIAL_STATE);
 
   const handleSelectFirmware = useCallback((entry: FirmwareEntry) => {
@@ -49,6 +50,25 @@ export function FlashOSWizard() {
     setState(INITIAL_STATE);
     clearLog();
   }, [clearLog, log]);
+
+  if (!supportsFlashWizard) {
+    return (
+      <div className="flashos section-panel">
+        <h2 className="section-heading">Flash OS</h2>
+        <p className="section-subheading">
+          Swap between CrossPoint-family firmware forks in a guided 3-step wizard: back up, flash, restore.
+        </p>
+        <div className="flashos__unsupported">
+          <p>
+            The Flash OS wizard needs <strong>USB Serial</strong>. Real CrossPoint firmware's web server has no
+            endpoint for a browser to push a firmware image or export/import stats over Wi-Fi — it only checks for
+            updates itself, and the only file transfer channel is a generic upload used by Sleep Screens.
+          </p>
+          <p>Switch to USB Serial in the sidebar to use this wizard, or head to Sleep Screens — that works fine over Wireless.</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flashos section-panel">

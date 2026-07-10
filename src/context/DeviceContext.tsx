@@ -25,6 +25,13 @@ export interface DeviceContextValue {
   isSupported: boolean;
   connectionState: ConnectionState;
   deviceLabel: string | null;
+  /**
+   * False in wireless mode: real CrossPoint firmware exposes no push-OTA or
+   * stats export/import endpoint over the network, only device-initiated
+   * update checks and a file-upload channel. The Flash OS wizard needs
+   * USB serial.
+   */
+  supportsFlashWizard: boolean;
 
   connectSerial: (existingPort?: SerialPort) => Promise<void>;
   connectWireless: (host: string) => Promise<void>;
@@ -103,37 +110,49 @@ export function DeviceProvider({ children }: { children: ReactNode }) {
   }, [mode, serial, wireless]);
 
   const backupStats = useCallback(async () => {
-    if (mode === "serial") {
-      log("> CMD_EXPORT_STATS", "command");
-      log("Reading stats.json from LittleFS partition…");
-      return serial.sendCommand("CMD_EXPORT_STATS\n", { idleMs: 600, timeoutMs: 20000 });
+    if (mode !== "serial") {
+      throw new Error(
+        "Wireless stats backup isn't available: CrossPoint's web server has no export endpoint (only a generic " +
+          "file upload channel). Switch to USB Serial for this step.",
+      );
     }
-    log("GET /api/backup", "command");
-    return wireless.exportStats();
-  }, [log, mode, serial, wireless]);
+    log("> CMD_EXPORT_STATS", "command");
+    log("Reading stats.json from LittleFS partition…");
+    return serial.sendCommand("CMD_EXPORT_STATS\n", { idleMs: 600, timeoutMs: 20000 });
+  }, [log, mode, serial]);
 
   const restoreStats = useCallback(
     async (json: string) => {
-      if (mode === "serial") {
-        if (serial.connectionState !== "connected") {
-          const port = lastPortRef.current;
-          if (!port) throw new Error("No previously connected serial port to restore onto.");
-          log("Re-opening the port on the freshly updated firmware layer…");
-          await connectSerial(port);
-          log("Device reconnected.", "success");
-        }
-        log("> CMD_IMPORT_STATS:[JSON]", "command");
-        log("Piping backed-up stats back onto the partition…");
-        return serial.sendCommand(`CMD_IMPORT_STATS:${json}\n`, { idleMs: 600, timeoutMs: 20000 });
+      if (mode !== "serial") {
+        throw new Error(
+          "Wireless stats restore isn't available: CrossPoint's web server has no import endpoint. Switch to USB " +
+            "Serial for this step.",
+        );
       }
-      log("POST /api/restore", "command");
-      return wireless.importStats(json);
+      if (serial.connectionState !== "connected") {
+        const port = lastPortRef.current;
+        if (!port) throw new Error("No previously connected serial port to restore onto.");
+        log("Re-opening the port on the freshly updated firmware layer…");
+        await connectSerial(port);
+        log("Device reconnected.", "success");
+      }
+      log("> CMD_IMPORT_STATS:[JSON]", "command");
+      log("Piping backed-up stats back onto the partition…");
+      return serial.sendCommand(`CMD_IMPORT_STATS:${json}\n`, { idleMs: 600, timeoutMs: 20000 });
     },
-    [connectSerial, log, mode, serial, wireless],
+    [connectSerial, log, mode, serial],
   );
 
   const flash = useCallback(
     async ({ bytes, eraseFlash, onProgress }: FlashArgs) => {
+      if (mode !== "serial") {
+        throw new Error(
+          "Wireless firmware flashing isn't available: CrossPoint devices only update by connecting out to an " +
+            "update server themselves — there's no endpoint for a browser to push a firmware image to. Use USB " +
+            "Serial to flash, or check the device's own Settings screen for on-device OTA.",
+        );
+      }
+
       log(
         eraseFlash
           ? "Erase Flash is ENABLED — full chip erase will run before writing."
@@ -141,30 +160,24 @@ export function DeviceProvider({ children }: { children: ReactNode }) {
         eraseFlash ? "warn" : "info",
       );
 
-      if (mode === "serial") {
-        const port = lastPortRef.current ?? serial.port;
-        if (!port) throw new Error("No serial port available to flash. Connect a device first.");
+      const port = lastPortRef.current ?? serial.port;
+      if (!port) throw new Error("No serial port available to flash. Connect a device first.");
 
-        if (serial.connectionState === "connected") {
-          log("Releasing the serial link so the flasher can take exclusive ownership of the port…");
-          await serial.disconnect();
-        }
-
-        log("Starting esptool-js flash routine…", "command");
-        await flashSerial({
-          port,
-          firmware: bytes,
-          options: { eraseFlash, baudRate: 115200, flashAddress: CROSSPOINT_APP_PARTITION_OFFSET },
-          onProgress,
-          onLog: (message) => log(message),
-        });
-        return;
+      if (serial.connectionState === "connected") {
+        log("Releasing the serial link so the flasher can take exclusive ownership of the port…");
+        await serial.disconnect();
       }
 
-      log("POST /update (multipart firmware upload)", "command");
-      await wireless.flash(bytes, eraseFlash, onProgress);
+      log("Starting esptool-js flash routine…", "command");
+      await flashSerial({
+        port,
+        firmware: bytes,
+        options: { eraseFlash, baudRate: 115200, flashAddress: CROSSPOINT_APP_PARTITION_OFFSET },
+        onProgress,
+        onLog: (message) => log(message),
+      });
     },
-    [flashSerial, log, mode, serial, wireless],
+    [flashSerial, log, mode, serial],
   );
 
   const uploadFile = useCallback(
@@ -173,7 +186,7 @@ export function DeviceProvider({ children }: { children: ReactNode }) {
         await uploadFileToDevice({ path, bytes, sendCommand: serial.sendCommand, onProgress, log });
         return;
       }
-      log(`POST /api/upload (${path})`, "command");
+      log(`Uploading ${path} over the WebSocket upload channel (port 81)…`, "command");
       await wireless.uploadFile(path, bytes, onProgress);
       log(`Upload complete: ${path}`, "success");
     },
@@ -183,6 +196,7 @@ export function DeviceProvider({ children }: { children: ReactNode }) {
   const connectionState = mode === "serial" ? serial.connectionState : wireless.connectionState;
   const deviceLabel = mode === "serial" ? formatSerialLabel(serial.port) : wireless.host;
   const isSupported = mode === "serial" ? serial.isSupported : true;
+  const supportsFlashWizard = mode === "serial";
 
   const value = useMemo<DeviceContextValue>(
     () => ({
@@ -191,6 +205,7 @@ export function DeviceProvider({ children }: { children: ReactNode }) {
       isSupported,
       connectionState,
       deviceLabel,
+      supportsFlashWizard,
       connectSerial,
       connectWireless,
       disconnect,
@@ -217,6 +232,7 @@ export function DeviceProvider({ children }: { children: ReactNode }) {
       mode,
       restoreStats,
       setMode,
+      supportsFlashWizard,
       uploadFile,
     ],
   );

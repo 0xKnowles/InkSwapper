@@ -13,7 +13,7 @@ interface Step1Props {
 }
 
 export function Step1SelectConnect({ selectedFirmware, onSelectFirmware, onComplete }: Step1Props) {
-  const { mode, isSupported, connectionState, connectSerial, backupStats, log } = useDevice();
+  const { isSupported, connectionState, connectSerial, backupStats, log } = useDevice();
 
   const [isBackingUp, setIsBackingUp] = useState(false);
   const [backedUpStats, setBackedUpStats] = useState<string | null>(null);
@@ -89,7 +89,7 @@ export function Step1SelectConnect({ selectedFirmware, onSelectFirmware, onCompl
       </div>
 
       <div className="step1__connect-panel">
-        {mode === "serial" && !isSupported && <p className="step1__warning">{getSerialUnsupportedReason()}</p>}
+        {!isSupported && <p className="step1__warning">{getSerialUnsupportedReason()}</p>}
 
         <div className="step1__connect-row">
           {alreadyConnected ? (
@@ -101,7 +101,7 @@ export function Step1SelectConnect({ selectedFirmware, onSelectFirmware, onCompl
             >
               {isBackingUp ? "Backing up…" : backedUpStats !== null ? "Backed up" : "Back Up Stats"}
             </button>
-          ) : mode === "serial" ? (
+          ) : (
             <button
               type="button"
               className="button button--primary"
@@ -110,8 +110,6 @@ export function Step1SelectConnect({ selectedFirmware, onSelectFirmware, onCompl
             >
               {connectionState === "connecting" ? "Connecting…" : "Connect via USB-C"}
             </button>
-          ) : (
-            <p className="step1__hint">Connect a device from the sidebar, then come back here to back it up.</p>
           )}
           <span className={`step1__status step1__status--${connectionState}`}>{connectionState}</span>
         </div>

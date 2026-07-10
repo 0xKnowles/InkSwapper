@@ -66,7 +66,7 @@ export function AppShell({ activeSection, onNavigate, children }: AppShellProps)
       return;
     }
     if (!hostInput.trim()) return;
-    log(`Connecting to ${hostInput.trim()} over Wi-Fi…`);
+    log(`Opening a WebSocket connection to ${hostInput.trim()}:81…`);
     try {
       await connectWireless(hostInput);
       log("Device reachable over Wi-Fi.", "success");
@@ -146,10 +146,14 @@ export function AppShell({ activeSection, onNavigate, children }: AppShellProps)
             <>
               {isMixedContentRisk && (
                 <p className="shell__device-warning">
-                  This page is loaded over https:// — browsers block requests to a plain http:// device from an
-                  https:// page. Load CrossSwap over http:// or localhost to use Wireless mode.
+                  This page is loaded over https:// — browsers block a plain ws:// connection to a device on your
+                  LAN from an https:// page. Load CrossSwap over http:// or localhost to use Wireless mode.
                 </p>
               )}
+              <p className="shell__device-hint">
+                Uploads only — CrossPoint's web server has no push-firmware or stats endpoint, and its file API
+                doesn't send CORS headers, so only the WebSocket upload channel (port 81) works cross-origin.
+              </p>
               {!isConnected && (
                 <input
                   type="text"
