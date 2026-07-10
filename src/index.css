@@ -62,6 +62,10 @@ button {
 /* Shared button primitives used across every wizard step. */
 .button {
   appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
   border-radius: var(--radius);
   padding: 10px 18px;
   font-size: 13px;
@@ -130,4 +134,17 @@ button {
   font-size: 13.5px;
   color: var(--text-dim);
   max-width: 68ch;
+}
+
+/* Prevents iOS/Android auto-zoom on focus and keeps tap targets comfortable. */
+@media (max-width: 640px) {
+  input,
+  select,
+  textarea {
+    font-size: 16px;
+  }
+
+  .section-heading {
+    font-size: 19px;
+  }
 }

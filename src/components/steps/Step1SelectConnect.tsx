@@ -8,28 +8,23 @@ import "./Step1SelectConnect.css";
 interface Step1Props {
   selectedFirmware: FirmwareEntry | null;
   onSelectFirmware: (entry: FirmwareEntry) => void;
-  onComplete: (port: SerialPort, backedUpStats: string) => void;
+  onComplete: (backedUpStats: string) => void;
 }
 
-const BACKUP_COMMAND = "CMD_EXPORT_STATS\n";
-
 export function Step1SelectConnect({ selectedFirmware, onSelectFirmware, onComplete }: Step1Props) {
-  const { isSupported, connectionState, connect, disconnect, sendCommand, port, log } = useDevice();
+  const { mode, isSupported, connectionState, connectSerial, backupStats, log } = useDevice();
 
   const [isBackingUp, setIsBackingUp] = useState(false);
-  const [backupDone, setBackupDone] = useState(false);
   const [backedUpStats, setBackedUpStats] = useState<string | null>(null);
   const [connectError, setConnectError] = useState<string | null>(null);
 
   const runBackup = useCallback(async () => {
     setIsBackingUp(true);
     try {
-      log(`> ${BACKUP_COMMAND.trim()}`, "command");
-      log("Reading stats.json from LittleFS partition…");
-      const response = await sendCommand(BACKUP_COMMAND, { idleMs: 600, timeoutMs: 20000 });
+      const response = await backupStats();
 
       if (!response.trim()) {
-        log("No data received for CMD_EXPORT_STATS — device may not support this command yet.", "warn");
+        log("No data received for the stats export — device may not support this command yet.", "warn");
       } else {
         log(`Buffered ${response.length} bytes of stats payload.`);
       }
@@ -46,19 +41,18 @@ export function Step1SelectConnect({ selectedFirmware, onSelectFirmware, onCompl
       }
 
       setBackedUpStats(response);
-      setBackupDone(true);
     } catch (err) {
       log(err instanceof Error ? err.message : "Backup failed for an unknown reason.", "error");
     } finally {
       setIsBackingUp(false);
     }
-  }, [log, selectedFirmware, sendCommand]);
+  }, [backupStats, log, selectedFirmware]);
 
   const handleConnect = useCallback(async () => {
     setConnectError(null);
     log("Requesting Web Serial access…");
     try {
-      await connect();
+      await connectSerial();
       log("Device connected over USB-C.", "success");
       await runBackup();
     } catch (err) {
@@ -66,15 +60,12 @@ export function Step1SelectConnect({ selectedFirmware, onSelectFirmware, onCompl
       setConnectError(message);
       log(message, "error");
     }
-  }, [connect, log, runBackup]);
+  }, [connectSerial, log, runBackup]);
 
-  const handleContinue = useCallback(async () => {
-    if (!port || !backedUpStats) return;
-    const targetPort = port;
-    log("Releasing serial link so the flasher can take over the port…");
-    await disconnect();
-    onComplete(targetPort, backedUpStats);
-  }, [backedUpStats, disconnect, log, onComplete, port]);
+  const handleContinue = useCallback(() => {
+    if (!backedUpStats) return;
+    onComplete(backedUpStats);
+  }, [backedUpStats, onComplete]);
 
   const alreadyConnected = connectionState === "connected";
 
@@ -97,10 +88,10 @@ export function Step1SelectConnect({ selectedFirmware, onSelectFirmware, onCompl
       </div>
 
       <div className="step1__connect-panel">
-        {!isSupported && (
+        {mode === "serial" && !isSupported && (
           <p className="step1__warning">
-            This browser does not expose the Web Serial API. Use a Chromium-based browser (Chrome, Edge, Brave) over
-            HTTPS or localhost.
+            This browser does not expose the Web Serial API. On Android, native USB serial support is very new and
+            limited to a handful of devices — switch to Wireless mode in the sidebar instead.
           </p>
         )}
 
@@ -109,12 +100,12 @@ export function Step1SelectConnect({ selectedFirmware, onSelectFirmware, onCompl
             <button
               type="button"
               className="button button--primary"
-              disabled={!selectedFirmware || isBackingUp || backupDone}
+              disabled={!selectedFirmware || isBackingUp || backedUpStats !== null}
               onClick={runBackup}
             >
-              {isBackingUp ? "Backing up…" : backupDone ? "Backed up" : "Back Up Stats"}
+              {isBackingUp ? "Backing up…" : backedUpStats !== null ? "Backed up" : "Back Up Stats"}
             </button>
-          ) : (
+          ) : mode === "serial" ? (
             <button
               type="button"
               className="button button--primary"
@@ -123,6 +114,8 @@ export function Step1SelectConnect({ selectedFirmware, onSelectFirmware, onCompl
             >
               {connectionState === "connecting" ? "Connecting…" : "Connect via USB-C"}
             </button>
+          ) : (
+            <p className="step1__hint">Connect a device from the sidebar, then come back here to back it up.</p>
           )}
           <span className={`step1__status step1__status--${connectionState}`}>{connectionState}</span>
         </div>
@@ -130,9 +123,11 @@ export function Step1SelectConnect({ selectedFirmware, onSelectFirmware, onCompl
         {connectError && <p className="step1__error">{connectError}</p>}
 
         {isBackingUp && <p className="step1__hint">Backing up on-device stats before continuing…</p>}
-        {backupDone && !isBackingUp && <p className="step1__hint step1__hint--success">Backup complete and saved.</p>}
+        {backedUpStats !== null && !isBackingUp && (
+          <p className="step1__hint step1__hint--success">Backup complete and saved.</p>
+        )}
 
-        <button type="button" className="button button--outline" disabled={!backupDone} onClick={handleContinue}>
+        <button type="button" className="button button--outline" disabled={backedUpStats === null} onClick={handleContinue}>
           Continue to Flash →
         </button>
       </div>

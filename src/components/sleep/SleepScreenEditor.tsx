@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useDevice } from "../../context/DeviceContext";
-import { uploadFileToDevice } from "../../lib/fileTransfer";
 import {
   RESOLUTION_PRESETS,
   drawImageToCanvas,
@@ -23,7 +22,7 @@ function sanitizeFilename(name: string): string {
 }
 
 export function SleepScreenEditor() {
-  const { connectionState, sendCommand, log } = useDevice();
+  const { connectionState, uploadFile, log } = useDevice();
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [sourceImage, setSourceImage] = useState<HTMLImageElement | null>(null);
@@ -115,12 +114,10 @@ export function SleepScreenEditor() {
 
     const path = `/sleep/${sanitizeFilename(filename)}.bmp`;
     try {
-      await uploadFileToDevice({
+      await uploadFile({
         path,
         bytes: encodedBytes,
-        sendCommand,
         onProgress: (percent) => setUploadPercent(percent),
-        log,
       });
       setUploadDone(true);
     } catch (err) {
@@ -130,7 +127,7 @@ export function SleepScreenEditor() {
     } finally {
       setIsUploading(false);
     }
-  }, [encodedBytes, filename, log, sendCommand]);
+  }, [encodedBytes, filename, log, uploadFile]);
 
   const isConnected = connectionState === "connected";
 

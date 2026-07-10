@@ -59,13 +59,11 @@ export interface ResolvedRelease {
 /** The three sequential phases of the flashing wizard. */
 export type WizardStep = 1 | 2 | 3;
 
-/** Lifecycle state of the Web Serial port connection. */
-export type SerialConnectionState =
-  | "disconnected"
-  | "connecting"
-  | "connected"
-  | "disconnecting"
-  | "error";
+/** Lifecycle state of the active device connection, serial or wireless. */
+export type ConnectionState = "disconnected" | "connecting" | "connected" | "disconnecting" | "error";
+
+/** Which physical transport is currently selected to talk to the device. */
+export type TransportMode = "serial" | "wireless";
 
 /** Severity used to color-code terminal log lines. */
 export type LogLevel = "info" | "success" | "warn" | "error" | "command";

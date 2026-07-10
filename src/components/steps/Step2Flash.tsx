@@ -1,7 +1,6 @@
 import { useCallback, useRef, useState } from "react";
 import type { FirmwareEntry, FlashProgress } from "../../types";
 import { useGitHubRelease } from "../../hooks/useGitHubRelease";
-import { useFirmwareFlasher, CROSSPOINT_APP_PARTITION_OFFSET } from "../../hooks/useFirmwareFlasher";
 import { useDevice } from "../../context/DeviceContext";
 import { resolveFirmwareAsset, fetchFirmwareBinary, formatBytes } from "../../lib/firmwareAsset";
 import { ProgressBar } from "../ProgressBar";
@@ -9,8 +8,7 @@ import "./Step2Flash.css";
 
 interface Step2Props {
   firmware: FirmwareEntry;
-  port: SerialPort;
-  onComplete: (port: SerialPort) => void;
+  onComplete: () => void;
 }
 
 interface FirmwareSource {
@@ -21,10 +19,9 @@ interface FirmwareSource {
 
 const IDLE_PROGRESS: FlashProgress = { percent: 0, phase: "Idle", bytesWritten: 0, totalBytes: 0 };
 
-export function Step2Flash({ firmware, port, onComplete }: Step2Props) {
+export function Step2Flash({ firmware, onComplete }: Step2Props) {
   const { status: releaseStatus, release, error: releaseError } = useGitHubRelease(firmware);
-  const { isFlashing, flash } = useFirmwareFlasher();
-  const { log } = useDevice();
+  const { mode, flash, log } = useDevice();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [eraseFlash, setEraseFlash] = useState(false);
@@ -32,6 +29,7 @@ export function Step2Flash({ firmware, port, onComplete }: Step2Props) {
   const [flashError, setFlashError] = useState<string | null>(null);
   const [downloadError, setDownloadError] = useState<string | null>(null);
   const [isDownloading, setIsDownloading] = useState(false);
+  const [isFlashing, setIsFlashing] = useState(false);
   const [isDone, setIsDone] = useState(false);
   const [source, setSource] = useState<FirmwareSource | null>(null);
 
@@ -73,23 +71,11 @@ export function Step2Flash({ firmware, port, onComplete }: Step2Props) {
     if (!source) return;
     setFlashError(null);
     setIsDone(false);
+    setIsFlashing(true);
 
     try {
-      log(
-        eraseFlash
-          ? "Erase Flash is ENABLED — full chip erase will run before writing."
-          : "Erase Flash is disabled (default) — only the app partition will be rewritten.",
-        eraseFlash ? "warn" : "info",
-      );
-
-      log(`Starting esptool-js flash routine with ${source.label}…`, "command");
-      await flash({
-        port,
-        firmware: source.bytes,
-        options: { eraseFlash, baudRate: 115200, flashAddress: CROSSPOINT_APP_PARTITION_OFFSET },
-        onProgress: setProgress,
-        onLog: (message) => log(message),
-      });
+      log(`Starting flash routine over ${mode === "serial" ? "USB serial (esptool-js)" : "Wi-Fi (OTA)"} with ${source.label}…`, "command");
+      await flash({ bytes: source.bytes, eraseFlash, onProgress: setProgress });
 
       log(`${firmware.name} flashed successfully.`, "success");
       setIsDone(true);
@@ -97,19 +83,18 @@ export function Step2Flash({ firmware, port, onComplete }: Step2Props) {
       const message = err instanceof Error ? err.message : "Flashing failed for an unknown reason.";
       setFlashError(message);
       log(message, "error");
+    } finally {
+      setIsFlashing(false);
     }
-  }, [eraseFlash, firmware.name, flash, log, port, source]);
-
-  const handleContinue = useCallback(() => {
-    onComplete(port);
-  }, [onComplete, port]);
+  }, [eraseFlash, firmware.name, flash, log, mode, source]);
 
   return (
     <div className="step2">
       <h2 className="step2__heading">Flash {firmware.name} to device</h2>
       <p className="step2__subheading">
-        Write the firmware image using esptool-js — either fetched from the resolved GitHub release, or uploaded
-        directly from your machine.
+        {mode === "serial"
+          ? "Write the firmware image over USB serial using esptool-js — fetched from the resolved GitHub release, or uploaded directly from your machine."
+          : "Write the firmware image over Wi-Fi (OTA) — fetched from the resolved GitHub release, or uploaded directly from your machine."}
       </p>
 
       <div className="step2__source-panel">
@@ -191,7 +176,7 @@ export function Step2Flash({ firmware, port, onComplete }: Step2Props) {
         >
           {isFlashing ? "Flashing…" : isDone ? "Flashed" : "Begin Flash"}
         </button>
-        <button type="button" className="button button--outline" disabled={!isDone} onClick={handleContinue}>
+        <button type="button" className="button button--outline" disabled={!isDone} onClick={onComplete}>
           Continue to Restore →
         </button>
       </div>

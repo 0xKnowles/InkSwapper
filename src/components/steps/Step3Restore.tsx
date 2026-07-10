@@ -5,13 +5,12 @@ import "./Step3Restore.css";
 
 interface Step3Props {
   firmware: FirmwareEntry;
-  port: SerialPort;
   backedUpStats: string;
   onFinish: () => void;
 }
 
-export function Step3Restore({ firmware, port, backedUpStats, onFinish }: Step3Props) {
-  const { connectionState, connect, disconnect, sendCommand, log } = useDevice();
+export function Step3Restore({ firmware, backedUpStats, onFinish }: Step3Props) {
+  const { connectionState, restoreStats, disconnect, log } = useDevice();
 
   const [isRestoring, setIsRestoring] = useState(false);
   const [isDone, setIsDone] = useState(false);
@@ -23,15 +22,7 @@ export function Step3Restore({ firmware, port, backedUpStats, onFinish }: Step3P
     setRestoreError(null);
 
     try {
-      log("Re-opening the port on the freshly updated firmware layer…");
-      await connect(port);
-      log("Device reconnected.", "success");
-
-      const command = `CMD_IMPORT_STATS:${backedUpStats}\n`;
-      log("> CMD_IMPORT_STATS:[JSON]", "command");
-      log("Piping backed-up stats back onto the partition…");
-
-      const response = await sendCommand(command, { idleMs: 600, timeoutMs: 20000 });
+      const response = await restoreStats(backedUpStats);
       setDeviceResponse(response);
       log(response.trim() ? `Device responded: ${response.trim()}` : "Device acknowledged import (no payload returned).");
 
@@ -44,7 +35,7 @@ export function Step3Restore({ firmware, port, backedUpStats, onFinish }: Step3P
     } finally {
       setIsRestoring(false);
     }
-  }, [backedUpStats, connect, log, port, sendCommand]);
+  }, [backedUpStats, log, restoreStats]);
 
   const handleFinish = useCallback(async () => {
     await disconnect();
@@ -63,7 +54,7 @@ export function Step3Restore({ firmware, port, backedUpStats, onFinish }: Step3P
         <p className="step3__line">
           Backup payload ready: <strong>{backedUpStats.length}</strong> bytes buffered from Step 1.
         </p>
-        <p className={`step3__status step3__status--${connectionState}`}>Serial link: {connectionState}</p>
+        <p className={`step3__status step3__status--${connectionState}`}>Connection: {connectionState}</p>
       </div>
 
       {restoreError && <p className="step3__error">{restoreError}</p>}

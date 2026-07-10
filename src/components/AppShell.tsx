@@ -17,37 +17,64 @@ interface AppShellProps {
   children: ReactNode;
 }
 
-function formatDeviceInfo(port: SerialPort | null): string | null {
-  if (!port) return null;
-  const info = port.getInfo();
-  if (info.usbVendorId === undefined || info.usbProductId === undefined) return null;
-  const hex = (n: number) => n.toString(16).padStart(4, "0").toUpperCase();
-  return `VID:${hex(info.usbVendorId)} PID:${hex(info.usbProductId)}`;
-}
+const isMixedContentRisk = typeof window !== "undefined" && window.location.protocol === "https:";
 
 export function AppShell({ activeSection, onNavigate, children }: AppShellProps) {
-  const { isSupported, connectionState, port, connect, disconnect, log, logLines } = useDevice();
-  const [connectError, setConnectError] = useState<string | null>(null);
+  const {
+    mode,
+    setMode,
+    isSupported,
+    connectionState,
+    deviceLabel,
+    connectSerial,
+    connectWireless,
+    disconnect,
+    log,
+    logLines,
+  } = useDevice();
 
-  const handleConnectToggle = useCallback(async () => {
+  const [connectError, setConnectError] = useState<string | null>(null);
+  const [hostInput, setHostInput] = useState("");
+
+  const isBusy = connectionState === "connecting" || connectionState === "disconnecting";
+  const isConnected = connectionState === "connected";
+
+  const handleSerialToggle = useCallback(async () => {
     setConnectError(null);
-    if (connectionState === "connected") {
+    if (isConnected) {
       log("Disconnecting device…");
       await disconnect();
       return;
     }
     log("Requesting Web Serial access…");
     try {
-      await connect();
+      await connectSerial();
       log("Device connected over USB-C.", "success");
     } catch (err) {
       const message = err instanceof Error ? err.message : "Failed to connect to serial device.";
       setConnectError(message);
       log(message, "error");
     }
-  }, [connect, connectionState, disconnect, log]);
+  }, [connectSerial, disconnect, isConnected, log]);
 
-  const deviceInfo = formatDeviceInfo(port);
+  const handleWirelessConnect = useCallback(async () => {
+    setConnectError(null);
+    if (isConnected) {
+      log("Disconnecting from device…");
+      await disconnect();
+      return;
+    }
+    if (!hostInput.trim()) return;
+    log(`Connecting to ${hostInput.trim()} over Wi-Fi…`);
+    try {
+      await connectWireless(hostInput);
+      log("Device reachable over Wi-Fi.", "success");
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Failed to reach device over Wi-Fi.";
+      setConnectError(message);
+      log(message, "error");
+    }
+  }, [connectWireless, disconnect, hostInput, isConnected, log]);
 
   return (
     <div className="shell">
@@ -72,21 +99,83 @@ export function AppShell({ activeSection, onNavigate, children }: AppShellProps)
         </nav>
 
         <div className="shell__device">
+          <div className="shell__mode-toggle" role="tablist" aria-label="Connection transport">
+            <button
+              type="button"
+              role="tab"
+              aria-selected={mode === "serial"}
+              className={`shell__mode-button${mode === "serial" ? " shell__mode-button--active" : ""}`}
+              disabled={isConnected || isBusy}
+              onClick={() => setMode("serial")}
+            >
+              USB Serial
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={mode === "wireless"}
+              className={`shell__mode-button${mode === "wireless" ? " shell__mode-button--active" : ""}`}
+              disabled={isConnected || isBusy}
+              onClick={() => setMode("wireless")}
+            >
+              Wireless
+            </button>
+          </div>
+
           <div className="shell__device-row">
             <span className={`shell__device-dot shell__device-dot--${connectionState}`} />
             <span className="shell__device-state">{connectionState}</span>
           </div>
-          {deviceInfo && <span className="shell__device-info">{deviceInfo}</span>}
-          {!isSupported && <p className="shell__device-warning">Web Serial unsupported in this browser.</p>}
-          {connectError && <p className="shell__device-warning">{connectError}</p>}
-          <button
-            type="button"
-            className="button button--outline shell__device-button"
-            disabled={!isSupported || connectionState === "connecting" || connectionState === "disconnecting"}
-            onClick={handleConnectToggle}
-          >
-            {connectionState === "connected" ? "Disconnect" : "Connect Device"}
-          </button>
+          {deviceLabel && <span className="shell__device-info">{deviceLabel}</span>}
+
+          {mode === "serial" ? (
+            <>
+              {!isSupported && (
+                <p className="shell__device-warning">
+                  Web Serial unsupported here. On Android this needs Chrome 148+ on select devices — try Wireless
+                  mode instead.
+                </p>
+              )}
+              {connectError && <p className="shell__device-warning">{connectError}</p>}
+              <button
+                type="button"
+                className="button button--outline shell__device-button"
+                disabled={!isSupported || isBusy}
+                onClick={handleSerialToggle}
+              >
+                {isConnected ? "Disconnect" : "Connect Device"}
+              </button>
+            </>
+          ) : (
+            <>
+              {isMixedContentRisk && (
+                <p className="shell__device-warning">
+                  This page is loaded over https:// — browsers block requests to a plain http:// device from an
+                  https:// page. Load CrossSwap over http:// or localhost to use Wireless mode.
+                </p>
+              )}
+              {!isConnected && (
+                <input
+                  type="text"
+                  inputMode="url"
+                  placeholder="device IP or hostname"
+                  className="shell__host-input"
+                  value={hostInput}
+                  onChange={(e) => setHostInput(e.target.value)}
+                  disabled={isBusy}
+                />
+              )}
+              {connectError && <p className="shell__device-warning">{connectError}</p>}
+              <button
+                type="button"
+                className="button button--outline shell__device-button"
+                disabled={isBusy || (!isConnected && !hostInput.trim())}
+                onClick={handleWirelessConnect}
+              >
+                {isConnected ? "Disconnect" : "Connect Wireless"}
+              </button>
+            </>
+          )}
         </div>
       </aside>
 

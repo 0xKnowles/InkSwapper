@@ -89,6 +89,38 @@
   gap: 8px;
 }
 
+.shell__mode-toggle {
+  display: flex;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.shell__mode-button {
+  flex: 1;
+  padding: 6px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  background: transparent;
+  color: var(--text-dim);
+  border: none;
+  cursor: pointer;
+}
+
+.shell__mode-button:not(:first-child) {
+  border-left: 1px solid var(--line-strong);
+}
+
+.shell__mode-button--active {
+  background: var(--surface-2);
+  color: var(--text-max);
+}
+
+.shell__mode-button:disabled {
+  cursor: not-allowed;
+}
+
 .shell__device-row {
   display: flex;
   align-items: center;
@@ -127,6 +159,7 @@
   font-family: var(--font-mono);
   font-size: 10.5px;
   color: var(--text-faint);
+  word-break: break-all;
 }
 
 .shell__device-warning {
@@ -134,6 +167,22 @@
   font-size: 11px;
   color: var(--text-dim);
   line-height: 1.4;
+}
+
+.shell__host-input {
+  width: 100%;
+  background: var(--surface-1);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  color: var(--text-max);
+  padding: 8px 10px;
+  font-size: 13px;
+  font-family: var(--font-mono);
+}
+
+.shell__host-input:focus {
+  outline: none;
+  border-color: var(--text-dim);
 }
 
 .shell__device-button {
@@ -158,4 +207,74 @@
 
 .shell__terminal {
   flex-shrink: 0;
+}
+
+/* --- Mobile layout: sidebar collapses into a horizontal top bar --- */
+@media (max-width: 860px) {
+  .shell {
+    flex-direction: column;
+    min-height: 100dvh;
+  }
+
+  .shell__sidebar {
+    width: 100%;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    border-right: none;
+    border-bottom: 1px solid var(--line);
+    padding: 12px 16px;
+    gap: 12px;
+  }
+
+  .shell__brand {
+    flex-shrink: 0;
+    padding: 0;
+  }
+
+  .shell__nav {
+    flex-direction: row;
+    flex: 1;
+    min-width: 0;
+    overflow-x: auto;
+    gap: 6px;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .shell__nav-item {
+    flex-direction: row;
+    align-items: center;
+    white-space: nowrap;
+    flex-shrink: 0;
+    padding: 9px 12px;
+  }
+
+  .shell__nav-hint {
+    display: none;
+  }
+
+  .shell__device {
+    margin-top: 0;
+    width: 100%;
+    order: 10;
+  }
+
+  .shell__main {
+    padding: 16px;
+    gap: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .shell__brand-title {
+    font-size: 14px;
+  }
+
+  .shell__nav-item {
+    padding: 8px 10px;
+  }
+
+  .shell__nav-label {
+    font-size: 12.5px;
+  }
 }

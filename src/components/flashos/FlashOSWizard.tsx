@@ -9,21 +9,19 @@ import { Step3Restore } from "../steps/Step3Restore";
 interface WizardState {
   step: WizardStep;
   selectedFirmware: FirmwareEntry | null;
-  devicePort: SerialPort | null;
   backedUpStats: string | null;
 }
 
 const INITIAL_STATE: WizardState = {
   step: 1,
   selectedFirmware: null,
-  devicePort: null,
   backedUpStats: null,
 };
 
 /**
  * Guided 3-step OS swap flow: back up on-device stats, flash the selected
  * firmware, then restore the backup. Reuses the app-wide device connection
- * from DeviceContext rather than owning its own serial link.
+ * from DeviceContext rather than owning its own transport.
  */
 export function FlashOSWizard() {
   const { log, clearLog } = useDevice();
@@ -34,20 +32,17 @@ export function FlashOSWizard() {
   }, []);
 
   const handleStep1Complete = useCallback(
-    (port: SerialPort, backedUpStats: string) => {
+    (backedUpStats: string) => {
       log("Advancing to Step 2: Flash Firmware Partition.");
-      setState((prev) => ({ ...prev, step: 2, devicePort: port, backedUpStats }));
+      setState((prev) => ({ ...prev, step: 2, backedUpStats }));
     },
     [log],
   );
 
-  const handleStep2Complete = useCallback(
-    (port: SerialPort) => {
-      log("Advancing to Step 3: Restore Data & Finalize.");
-      setState((prev) => ({ ...prev, step: 3, devicePort: port }));
-    },
-    [log],
-  );
+  const handleStep2Complete = useCallback(() => {
+    log("Advancing to Step 3: Restore Data & Finalize.");
+    setState((prev) => ({ ...prev, step: 3 }));
+  }, [log]);
 
   const handleFinish = useCallback(() => {
     log("Flash OS session reset. Ready for another swap.");
@@ -67,17 +62,12 @@ export function FlashOSWizard() {
         />
       )}
 
-      {state.step === 2 && state.selectedFirmware && state.devicePort && (
-        <Step2Flash firmware={state.selectedFirmware} port={state.devicePort} onComplete={handleStep2Complete} />
+      {state.step === 2 && state.selectedFirmware && (
+        <Step2Flash firmware={state.selectedFirmware} onComplete={handleStep2Complete} />
       )}
 
-      {state.step === 3 && state.selectedFirmware && state.devicePort && state.backedUpStats !== null && (
-        <Step3Restore
-          firmware={state.selectedFirmware}
-          port={state.devicePort}
-          backedUpStats={state.backedUpStats}
-          onFinish={handleFinish}
-        />
+      {state.step === 3 && state.selectedFirmware && state.backedUpStats !== null && (
+        <Step3Restore firmware={state.selectedFirmware} backedUpStats={state.backedUpStats} onFinish={handleFinish} />
       )}
     </div>
   );

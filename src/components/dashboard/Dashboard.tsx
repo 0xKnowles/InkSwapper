@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useState } from "react";
 import { useDevice } from "../../context/DeviceContext";
 import type { Section } from "../AppShell";
 import "./Dashboard.css";
@@ -39,16 +39,8 @@ interface DashboardProps {
 }
 
 export function Dashboard({ onNavigate }: DashboardProps) {
-  const { connectionState, port } = useDevice();
+  const { mode, connectionState, deviceLabel } = useDevice();
   const [backups, setBackups] = useState<BackupRecord[]>(() => loadBackups());
-
-  const deviceInfo = useMemo(() => {
-    if (!port) return null;
-    const info = port.getInfo();
-    if (info.usbVendorId === undefined || info.usbProductId === undefined) return null;
-    const hex = (n: number) => n.toString(16).padStart(4, "0").toUpperCase();
-    return `VID:${hex(info.usbVendorId)} · PID:${hex(info.usbProductId)}`;
-  }, [port]);
 
   const handleDeleteBackup = useCallback((key: string) => {
     window.localStorage.removeItem(key);
@@ -64,12 +56,16 @@ export function Dashboard({ onNavigate }: DashboardProps) {
 
       <div className="dashboard__status section-panel">
         <div>
-          <p className="dashboard__status-label">Serial link</p>
+          <p className="dashboard__status-label">Transport</p>
+          <p className="dashboard__status-value">{mode === "serial" ? "USB Serial" : "Wireless"}</p>
+        </div>
+        <div>
+          <p className="dashboard__status-label">Connection</p>
           <p className={`dashboard__status-value dashboard__status-value--${connectionState}`}>{connectionState}</p>
         </div>
         <div>
           <p className="dashboard__status-label">Device</p>
-          <p className="dashboard__status-value">{deviceInfo ?? "—"}</p>
+          <p className="dashboard__status-value">{deviceLabel ?? "—"}</p>
         </div>
       </div>
 

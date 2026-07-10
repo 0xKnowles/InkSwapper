@@ -60,3 +60,23 @@
 .step-header__item--done .step-header__label {
   color: var(--text-mid);
 }
+
+@media (max-width: 640px) {
+  .step-header {
+    margin-bottom: 20px;
+  }
+
+  .step-header__label {
+    display: none;
+  }
+
+  .step-header__item {
+    flex: 0 0 auto;
+    gap: 0;
+  }
+
+  .step-header__connector {
+    flex: 1;
+    min-width: 12px;
+  }
+}

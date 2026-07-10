@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { SerialConnectionState } from "../types";
+import type { ConnectionState } from "../types";
 
 export interface UseWebSerialOptions {
   /** Baud rate used both for the initial CrossPoint stats handshake and esptool-js sessions. */
@@ -18,7 +18,7 @@ export interface CollectOptions {
 export interface UseWebSerialApi {
   /** Whether the browser exposes navigator.serial at all. */
   isSupported: boolean;
-  connectionState: SerialConnectionState;
+  connectionState: ConnectionState;
   /** The raw underlying SerialPort, exposed so esptool-js's Transport can bind to it directly. */
   port: SerialPort | null;
   /**
@@ -50,7 +50,7 @@ export function useWebSerial(options: UseWebSerialOptions = {}): UseWebSerialApi
 
   const isSupported = typeof navigator !== "undefined" && "serial" in navigator;
 
-  const [connectionState, setConnectionState] = useState<SerialConnectionState>("disconnected");
+  const [connectionState, setConnectionState] = useState<ConnectionState>("disconnected");
   const [port, setPort] = useState<SerialPort | null>(null);
 
   const readerRef = useRef<ReadableStreamDefaultReader<string> | null>(null);
