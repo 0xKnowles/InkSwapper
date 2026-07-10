@@ -1,0 +1,75 @@
+.firmware-card {
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface-1);
+  cursor: pointer;
+  transition: border-color 150ms ease, background 150ms ease, transform 150ms ease;
+}
+
+.firmware-card:hover {
+  border-color: var(--line-strong);
+  transform: translateY(-1px);
+}
+
+.firmware-card--selected {
+  border-color: var(--text-max);
+  background: var(--surface-2);
+  box-shadow: 0 0 0 1px var(--text-max);
+}
+
+.firmware-card__top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.firmware-card__name {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-max);
+}
+
+.firmware-card__author {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-faint);
+}
+
+.firmware-card__description {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-dim);
+}
+
+.firmware-card__release {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-faint);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 16px;
+}
+
+.firmware-card__release--success {
+  color: var(--text-mid);
+}
+
+.firmware-card__release--error {
+  color: var(--text-dim);
+  font-style: italic;
+}
+
+.firmware-card__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  border: 1px solid currentColor;
+  flex-shrink: 0;
+}

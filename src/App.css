@@ -1,0 +1,68 @@
+.app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+}
+
+.app__header {
+  padding: 28px clamp(20px, 4vw, 56px) 20px;
+  border-bottom: 1px solid var(--line);
+}
+
+.app__title-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.app__title {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--text-max);
+}
+
+.app__badge {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  color: var(--text-dim);
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  padding: 3px 10px;
+}
+
+.app__tagline {
+  margin: 6px 0 0;
+  font-size: 13.5px;
+  color: var(--text-dim);
+}
+
+.app__main {
+  flex: 1;
+  width: 100%;
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 32px clamp(20px, 4vw, 56px) 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.app__panel {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface-1);
+  box-shadow: var(--shadow-card);
+  padding: clamp(18px, 3vw, 28px);
+}
+
+.app__footer {
+  padding: 16px clamp(20px, 4vw, 56px) 28px;
+  text-align: center;
+  font-size: 11.5px;
+  color: var(--text-faint);
+  font-family: var(--font-mono);
+}

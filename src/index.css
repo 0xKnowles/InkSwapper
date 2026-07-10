@@ -1,0 +1,111 @@
+:root {
+  color-scheme: dark;
+
+  /* Monochrome / grayscale palette — deep charcoal ground, crisp white accents. */
+  --bg: #0a0a0a;
+  --surface-0: #101010;
+  --surface-1: #161616;
+  --surface-2: #1c1c1c;
+  --line: #2a2a2a;
+  --line-strong: #3d3d3d;
+
+  --text-max: #f5f5f4;
+  --text-mid: #b8b8b6;
+  --text-dim: #8a8a88;
+  --text-faint: #5c5c5a;
+
+  --accent: #f5f5f4;
+  --danger: #e2e2e0;
+
+  --font-mono: "SFMono-Regular", "IBM Plex Mono", "JetBrains Mono", Menlo, Consolas, monospace;
+  --font-sans: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+
+  --radius: 6px;
+  --shadow-card: 0 1px 0 rgba(255, 255, 255, 0.02) inset, 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg);
+  color: var(--text-max);
+}
+
+body {
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+a {
+  color: inherit;
+}
+
+button {
+  font-family: inherit;
+}
+
+::selection {
+  background: var(--text-max);
+  color: var(--bg);
+}
+
+/* Shared button primitives used across every wizard step. */
+.button {
+  appearance: none;
+  border-radius: var(--radius);
+  padding: 10px 18px;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  transition: all 150ms ease;
+  border: 1px solid var(--line-strong);
+  background: var(--surface-1);
+  color: var(--text-max);
+}
+
+.button:hover:not(:disabled) {
+  border-color: var(--text-dim);
+  background: var(--surface-2);
+}
+
+.button:disabled {
+  cursor: not-allowed;
+  opacity: 0.4;
+}
+
+.button--primary {
+  background: var(--text-max);
+  color: var(--bg);
+  border-color: var(--text-max);
+}
+
+.button--primary:hover:not(:disabled) {
+  background: var(--text-mid);
+  border-color: var(--text-mid);
+}
+
+.button--outline {
+  background: transparent;
+}
+
+.button--danger-outline {
+  background: transparent;
+  border-color: var(--text-faint);
+  color: var(--text-mid);
+}
+
+.button--danger-outline:hover:not(:disabled) {
+  border-color: var(--text-max);
+  color: var(--text-max);
+}
