@@ -7,6 +7,10 @@
  * needed to write it — the exact bit depth a given CrossPoint fork expects
  * on-device is fork-specific and not something this app can know in
  * advance, so both options are offered.
+ *
+ * Resolution presets target the two supported CrossPoint host devices,
+ * both portrait-oriented: Xteink X4 (480×800, 4.3") and Xteink X3
+ * (528×792, 3.68").
  */
 
 export type FitMode = "cover" | "contain" | "stretch";
@@ -20,10 +24,9 @@ export interface ResolutionPreset {
 }
 
 export const RESOLUTION_PRESETS: ResolutionPreset[] = [
-  { id: "800x480", label: "800 × 480 (common 7.5\" e-ink panel)", width: 800, height: 480 },
-  { id: "1072x1448", label: "1072 × 1448 (6\" HD e-reader panel)", width: 1072, height: 1448 },
-  { id: "640x384", label: "640 × 384 (compact panel)", width: 640, height: 384 },
-  { id: "custom", label: "Custom…", width: 800, height: 480 },
+  { id: "xteink-x4", label: "Xteink X4 — 480 × 800 (4.3\", portrait)", width: 480, height: 800 },
+  { id: "xteink-x3", label: "Xteink X3 — 528 × 792 (3.68\", portrait)", width: 528, height: 792 },
+  { id: "custom", label: "Custom…", width: 480, height: 800 },
 ];
 
 /** Draws `image` onto an offscreen canvas at the target size using the given fit mode. */

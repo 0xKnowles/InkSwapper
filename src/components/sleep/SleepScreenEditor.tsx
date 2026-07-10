@@ -30,8 +30,8 @@ export function SleepScreenEditor() {
   const [sourceFileName, setSourceFileName] = useState<string | null>(null);
 
   const [presetId, setPresetId] = useState<string>(RESOLUTION_PRESETS[0].id);
-  const [customWidth, setCustomWidth] = useState(800);
-  const [customHeight, setCustomHeight] = useState(480);
+  const [customWidth, setCustomWidth] = useState(480);
+  const [customHeight, setCustomHeight] = useState(800);
   const [fitMode, setFitMode] = useState<FitMode>("cover");
   const [ditherMode, setDitherMode] = useState<DitherMode>("monochrome1bit");
   const [filename, setFilename] = useState("sleep-screen");
@@ -138,8 +138,8 @@ export function SleepScreenEditor() {
     <div className="sleep-editor section-panel">
       <h2 className="section-heading">Sleep Screens</h2>
       <p className="section-subheading">
-        Design custom sleep-screen artwork, dither it for e-ink, and upload it directly to the device's /sleep
-        directory.
+        Design custom sleep-screen artwork sized for the Xteink X3 or X4's portrait e-ink panel, dither it, and
+        upload it directly to the device's /sleep directory.
       </p>
 
       <div className="sleep-editor__layout">
@@ -151,7 +151,7 @@ export function SleepScreenEditor() {
           </label>
 
           <label className="sleep-editor__field">
-            <span className="sleep-editor__label">Target resolution</span>
+            <span className="sleep-editor__label">Target device</span>
             <select
               className="sleep-editor__select"
               value={presetId}
