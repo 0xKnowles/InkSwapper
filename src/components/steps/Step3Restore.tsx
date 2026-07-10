@@ -1,6 +1,6 @@
 import { useCallback, useState } from "react";
-import type { FirmwareEntry, LogLevel } from "../../types";
-import { useWebSerial } from "../../hooks/useWebSerial";
+import type { FirmwareEntry } from "../../types";
+import { useDevice } from "../../context/DeviceContext";
 import "./Step3Restore.css";
 
 interface Step3Props {
@@ -8,11 +8,10 @@ interface Step3Props {
   port: SerialPort;
   backedUpStats: string;
   onFinish: () => void;
-  log: (message: string, level?: LogLevel) => void;
 }
 
-export function Step3Restore({ firmware, port, backedUpStats, onFinish, log }: Step3Props) {
-  const { connectionState, connect, disconnect, sendCommand } = useWebSerial({ baudRate: 115200 });
+export function Step3Restore({ firmware, port, backedUpStats, onFinish }: Step3Props) {
+  const { connectionState, connect, disconnect, sendCommand, log } = useDevice();
 
   const [isRestoring, setIsRestoring] = useState(false);
   const [isDone, setIsDone] = useState(false);
@@ -37,7 +36,6 @@ export function Step3Restore({ firmware, port, backedUpStats, onFinish, log }: S
       log(response.trim() ? `Device responded: ${response.trim()}` : "Device acknowledged import (no payload returned).");
 
       log("Restore complete — CrossSwap finished successfully.", "success");
-      await disconnect();
       setIsDone(true);
     } catch (err) {
       const message = err instanceof Error ? err.message : "Restore failed for an unknown reason.";
@@ -46,7 +44,12 @@ export function Step3Restore({ firmware, port, backedUpStats, onFinish, log }: S
     } finally {
       setIsRestoring(false);
     }
-  }, [backedUpStats, connect, disconnect, log, port, sendCommand]);
+  }, [backedUpStats, connect, log, port, sendCommand]);
+
+  const handleFinish = useCallback(async () => {
+    await disconnect();
+    onFinish();
+  }, [disconnect, onFinish]);
 
   return (
     <div className="step3">
@@ -73,7 +76,7 @@ export function Step3Restore({ firmware, port, backedUpStats, onFinish, log }: S
       ) : (
         <div className="step3__done">
           <p className="step3__done-message">✓ CrossSwap finished successfully.</p>
-          <button type="button" className="button button--outline" onClick={onFinish}>
+          <button type="button" className="button button--outline" onClick={handleFinish}>
             Start Over
           </button>
         </div>

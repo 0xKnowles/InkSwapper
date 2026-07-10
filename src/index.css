@@ -109,3 +109,25 @@ button {
   border-color: var(--text-max);
   color: var(--text-max);
 }
+
+/* Shared bordered card wrapper used by every section's primary content panel. */
+.section-panel {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface-1);
+  box-shadow: var(--shadow-card);
+  padding: clamp(18px, 3vw, 28px);
+}
+
+.section-heading {
+  font-size: 22px;
+  margin: 0 0 4px;
+  color: var(--text-max);
+}
+
+.section-subheading {
+  margin: 0 0 20px;
+  font-size: 13.5px;
+  color: var(--text-dim);
+  max-width: 68ch;
+}

@@ -1,0 +1,161 @@
+.shell {
+  display: flex;
+  min-height: 100vh;
+  background: var(--bg);
+}
+
+.shell__sidebar {
+  width: 240px;
+  flex-shrink: 0;
+  border-right: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  padding: 22px 16px;
+  gap: 24px;
+}
+
+.shell__brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 6px;
+}
+
+.shell__brand-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-max);
+  letter-spacing: -0.01em;
+}
+
+.shell__brand-badge {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  color: var(--text-dim);
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  padding: 2px 8px;
+}
+
+.shell__nav {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.shell__nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  text-align: left;
+  padding: 10px 12px;
+  border-radius: var(--radius);
+  border: 1px solid transparent;
+  background: transparent;
+  cursor: pointer;
+  transition: all 130ms ease;
+}
+
+.shell__nav-item:hover {
+  background: var(--surface-1);
+}
+
+.shell__nav-item--active {
+  background: var(--surface-2);
+  border-color: var(--line-strong);
+}
+
+.shell__nav-label {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--text-max);
+}
+
+.shell__nav-hint {
+  font-size: 11px;
+  color: var(--text-faint);
+}
+
+.shell__device {
+  margin-top: auto;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface-0);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.shell__device-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.shell__device-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: 1px solid var(--line-strong);
+  background: transparent;
+  flex-shrink: 0;
+}
+
+.shell__device-dot--connected {
+  background: var(--text-max);
+  border-color: var(--text-max);
+}
+
+.shell__device-dot--connecting,
+.shell__device-dot--disconnecting {
+  background: var(--text-dim);
+  border-color: var(--text-dim);
+}
+
+.shell__device-state {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-mid);
+}
+
+.shell__device-info {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  color: var(--text-faint);
+}
+
+.shell__device-warning {
+  margin: 0;
+  font-size: 11px;
+  color: var(--text-dim);
+  line-height: 1.4;
+}
+
+.shell__device-button {
+  width: 100%;
+  padding: 8px 12px;
+  font-size: 12px;
+}
+
+.shell__main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  padding: 24px clamp(20px, 3vw, 40px);
+  gap: 20px;
+}
+
+.shell__content {
+  flex: 1;
+  min-height: 0;
+}
+
+.shell__terminal {
+  flex-shrink: 0;
+}

@@ -1,7 +1,7 @@
 import { useCallback, useState } from "react";
-import type { FirmwareEntry, LogLevel } from "../../types";
+import type { FirmwareEntry } from "../../types";
 import { FIRMWARE_CATALOG } from "../../data/firmwareCatalog";
-import { useWebSerial } from "../../hooks/useWebSerial";
+import { useDevice } from "../../context/DeviceContext";
 import { FirmwareCard } from "../FirmwareCard";
 import "./Step1SelectConnect.css";
 
@@ -9,15 +9,12 @@ interface Step1Props {
   selectedFirmware: FirmwareEntry | null;
   onSelectFirmware: (entry: FirmwareEntry) => void;
   onComplete: (port: SerialPort, backedUpStats: string) => void;
-  log: (message: string, level?: LogLevel) => void;
 }
 
 const BACKUP_COMMAND = "CMD_EXPORT_STATS\n";
 
-export function Step1SelectConnect({ selectedFirmware, onSelectFirmware, onComplete, log }: Step1Props) {
-  const { isSupported, connectionState, connect, disconnect, sendCommand, port } = useWebSerial({
-    baudRate: 115200,
-  });
+export function Step1SelectConnect({ selectedFirmware, onSelectFirmware, onComplete }: Step1Props) {
+  const { isSupported, connectionState, connect, disconnect, sendCommand, port, log } = useDevice();
 
   const [isBackingUp, setIsBackingUp] = useState(false);
   const [backupDone, setBackupDone] = useState(false);
@@ -79,6 +76,8 @@ export function Step1SelectConnect({ selectedFirmware, onSelectFirmware, onCompl
     onComplete(targetPort, backedUpStats);
   }, [backedUpStats, disconnect, log, onComplete, port]);
 
+  const alreadyConnected = connectionState === "connected";
+
   return (
     <div className="step1">
       <h2 className="step1__heading">Choose a firmware target</h2>
@@ -106,14 +105,25 @@ export function Step1SelectConnect({ selectedFirmware, onSelectFirmware, onCompl
         )}
 
         <div className="step1__connect-row">
-          <button
-            type="button"
-            className="button button--primary"
-            disabled={!isSupported || !selectedFirmware || connectionState === "connecting" || connectionState === "connected"}
-            onClick={handleConnect}
-          >
-            {connectionState === "connecting" ? "Connecting…" : "Connect via USB-C"}
-          </button>
+          {alreadyConnected ? (
+            <button
+              type="button"
+              className="button button--primary"
+              disabled={!selectedFirmware || isBackingUp || backupDone}
+              onClick={runBackup}
+            >
+              {isBackingUp ? "Backing up…" : backupDone ? "Backed up" : "Back Up Stats"}
+            </button>
+          ) : (
+            <button
+              type="button"
+              className="button button--primary"
+              disabled={!isSupported || !selectedFirmware || connectionState === "connecting"}
+              onClick={handleConnect}
+            >
+              {connectionState === "connecting" ? "Connecting…" : "Connect via USB-C"}
+            </button>
+          )}
           <span className={`step1__status step1__status--${connectionState}`}>{connectionState}</span>
         </div>
 

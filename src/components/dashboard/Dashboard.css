@@ -1,0 +1,139 @@
+.dashboard {
+  display: flex;
+  flex-direction: column;
+}
+
+.dashboard__status {
+  display: flex;
+  gap: 40px;
+  margin-bottom: 20px;
+}
+
+.dashboard__status-label {
+  margin: 0 0 4px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-faint);
+}
+
+.dashboard__status-value {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-mid);
+  text-transform: capitalize;
+}
+
+.dashboard__status-value--connected {
+  color: var(--text-max);
+}
+
+.dashboard__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+.dashboard__card {
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 20px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface-1);
+  box-shadow: var(--shadow-card);
+  cursor: pointer;
+  transition: border-color 150ms ease, transform 150ms ease;
+}
+
+.dashboard__card:hover {
+  border-color: var(--line-strong);
+  transform: translateY(-1px);
+}
+
+.dashboard__card-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-max);
+}
+
+.dashboard__card-body {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-dim);
+}
+
+.dashboard__card-cta {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-mid);
+}
+
+.dashboard__backups-title {
+  margin: 0 0 12px;
+  font-size: 14px;
+  color: var(--text-max);
+}
+
+.dashboard__empty {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-faint);
+}
+
+.dashboard__backups-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.dashboard__backup-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 8px 4px;
+  border-bottom: 1px solid var(--line);
+  font-size: 12.5px;
+}
+
+.dashboard__backup-row:last-child {
+  border-bottom: none;
+}
+
+.dashboard__backup-firmware {
+  color: var(--text-max);
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.dashboard__backup-meta {
+  color: var(--text-faint);
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  flex: 1;
+}
+
+.dashboard__backup-delete {
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--text-faint);
+  width: 22px;
+  height: 22px;
+  border-radius: 4px;
+  cursor: pointer;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.dashboard__backup-delete:hover {
+  color: var(--text-max);
+  border-color: var(--text-mid);
+}
