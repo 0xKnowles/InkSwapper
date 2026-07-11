@@ -1,0 +1,286 @@
+.library__hint {
+  font-size: 12.5px;
+  color: var(--text-faint);
+  margin: 0 0 12px;
+}
+
+.library__error {
+  font-size: 12.5px;
+  color: var(--text-max);
+  margin: 8px 0 0;
+}
+
+.library__layout {
+  display: grid;
+  grid-template-columns: minmax(220px, 280px) 1fr;
+  gap: 24px;
+}
+
+.library__panel-title {
+  margin: 0 0 8px;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-faint);
+  font-weight: 600;
+}
+
+.library__catalogs {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.library__catalog-list {
+  list-style: none;
+  margin: 0 0 10px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.library__catalog-list li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.library__catalog-item {
+  flex: 1;
+  text-align: left;
+  padding: 8px 10px;
+  border-radius: var(--radius);
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text-mid);
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.library__catalog-item:hover {
+  background: var(--surface-0);
+}
+
+.library__catalog-item--active {
+  background: var(--surface-2);
+  border-color: var(--line-strong);
+  color: var(--text-max);
+}
+
+.library__catalog-remove {
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--text-faint);
+  width: 22px;
+  height: 22px;
+  border-radius: 4px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.library__catalog-remove:hover {
+  color: var(--text-max);
+  border-color: var(--text-mid);
+}
+
+.library__add-button {
+  align-self: flex-start;
+  margin-bottom: 16px;
+}
+
+.library__add-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 16px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface-0);
+}
+
+.library__add-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.library__field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.library__label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-mid);
+}
+
+.library__input {
+  background: var(--surface-0);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  color: var(--text-max);
+  padding: 8px 10px;
+  font-size: 13px;
+  font-family: inherit;
+  width: 100%;
+}
+
+.library__input:focus {
+  outline: none;
+  border-color: var(--text-dim);
+}
+
+.library__manual {
+  margin-top: 8px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+
+.library__browser {
+  min-width: 0;
+}
+
+.library__toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.library__search {
+  display: flex;
+  gap: 8px;
+  flex: 1;
+  min-width: 200px;
+}
+
+.library__search .library__input {
+  flex: 1;
+}
+
+.library__feed-title {
+  margin: 0 0 12px;
+  font-size: 16px;
+  color: var(--text-max);
+}
+
+.library__nav-list {
+  list-style: none;
+  margin: 0 0 16px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.library__nav-item {
+  width: 100%;
+  text-align: left;
+  padding: 9px 12px;
+  border-radius: var(--radius);
+  border: 1px solid var(--line);
+  background: var(--surface-0);
+  color: var(--text-mid);
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.library__nav-item:hover {
+  border-color: var(--line-strong);
+  color: var(--text-max);
+}
+
+.library__book-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.library__book {
+  display: flex;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface-0);
+}
+
+.library__cover {
+  width: 48px;
+  height: 68px;
+  object-fit: cover;
+  border-radius: 3px;
+  border: 1px solid var(--line-strong);
+  flex-shrink: 0;
+  background: var(--surface-1);
+}
+
+.library__book-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.library__book-title {
+  margin: 0;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--text-max);
+}
+
+.library__book-author {
+  margin: 0;
+  font-size: 12px;
+  color: var(--text-dim);
+}
+
+.library__book-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.library__format {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.library__send-button {
+  font-size: 11.5px;
+  padding: 6px 10px;
+  min-height: 32px;
+}
+
+.library__download-link {
+  font-size: 13px;
+  color: var(--text-faint);
+  padding: 4px 6px;
+}
+
+.library__download-link:hover {
+  color: var(--text-max);
+}
+
+.library__pagination {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 16px;
+}
+
+@media (max-width: 760px) {
+  .library__layout {
+    grid-template-columns: 1fr;
+  }
+}

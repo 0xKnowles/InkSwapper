@@ -101,3 +101,10 @@ export interface FlashOptions {
   /** Flash offset address the firmware image is written to. */
   flashAddress: number;
 }
+
+/** A single file or folder entry as returned by a device directory listing. */
+export interface DeviceFileEntry {
+  name: string;
+  size: number;
+  isDirectory: boolean;
+}

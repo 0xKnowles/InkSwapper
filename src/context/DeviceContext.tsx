@@ -4,7 +4,7 @@ import { useWirelessDevice } from "../hooks/useWirelessDevice";
 import { useFirmwareFlasher, CROSSPOINT_APP_PARTITION_OFFSET } from "../hooks/useFirmwareFlasher";
 import { useTerminalLog } from "../hooks/useTerminalLog";
 import { uploadFileToDevice } from "../lib/fileTransfer";
-import type { ConnectionState, FlashProgress, LogLevel, LogLine, TransportMode } from "../types";
+import type { ConnectionState, DeviceFileEntry, FlashProgress, LogLevel, LogLine, TransportMode } from "../types";
 
 export interface FlashArgs {
   bytes: Uint8Array;
@@ -32,6 +32,13 @@ export interface DeviceContextValue {
    * USB serial.
    */
   supportsFlashWizard: boolean;
+  /**
+   * False in wireless mode: reading a directory listing needs the same
+   * CORS support the real firmware's HTTP API doesn't send, and there's no
+   * WebSocket equivalent for listing/moving files (upload-only). Clean Up
+   * needs USB serial.
+   */
+  supportsFileOps: boolean;
 
   connectSerial: (existingPort?: SerialPort) => Promise<void>;
   connectWireless: (host: string) => Promise<void>;
@@ -41,6 +48,9 @@ export interface DeviceContextValue {
   restoreStats: (json: string) => Promise<string>;
   flash: (args: FlashArgs) => Promise<void>;
   uploadFile: (args: UploadArgs) => Promise<void>;
+  listFiles: (path: string) => Promise<DeviceFileEntry[]>;
+  moveFile: (from: string, to: string) => Promise<string>;
+  makeDirectory: (path: string) => Promise<string>;
 
   log: (message: string, level?: LogLevel) => void;
   logLines: LogLine[];
@@ -193,10 +203,54 @@ export function DeviceProvider({ children }: { children: ReactNode }) {
     [log, mode, serial, wireless],
   );
 
+  const listFiles = useCallback(
+    async (path: string): Promise<DeviceFileEntry[]> => {
+      if (mode !== "serial") {
+        throw new Error(
+          "Listing device files isn't available over Wireless: CrossPoint's file API needs CORS support the real " +
+            "firmware doesn't send, and there's no WebSocket equivalent for reading a directory listing. Use USB Serial.",
+        );
+      }
+      log(`> CMD_LIST_FILES:${path}`, "command");
+      const response = await serial.sendCommand(`CMD_LIST_FILES:${path}\n`, { idleMs: 600, timeoutMs: 20000 });
+      try {
+        const parsed = JSON.parse(response.trim());
+        if (!Array.isArray(parsed)) throw new Error("not an array");
+        return parsed as DeviceFileEntry[];
+      } catch {
+        throw new Error(`Device returned an unexpected response to CMD_LIST_FILES: ${response.slice(0, 200)}`);
+      }
+    },
+    [log, mode, serial],
+  );
+
+  const moveFile = useCallback(
+    async (from: string, to: string): Promise<string> => {
+      if (mode !== "serial") {
+        throw new Error("Moving device files isn't available over Wireless. Use USB Serial.");
+      }
+      log(`> CMD_MOVE_FILE:${from}:${to}`, "command");
+      return serial.sendCommand(`CMD_MOVE_FILE:${from}:${to}\n`, { idleMs: 500, timeoutMs: 10000 });
+    },
+    [log, mode, serial],
+  );
+
+  const makeDirectory = useCallback(
+    async (path: string): Promise<string> => {
+      if (mode !== "serial") {
+        throw new Error("Creating device folders isn't available over Wireless. Use USB Serial.");
+      }
+      log(`> CMD_MKDIR:${path}`, "command");
+      return serial.sendCommand(`CMD_MKDIR:${path}\n`, { idleMs: 500, timeoutMs: 10000 });
+    },
+    [log, mode, serial],
+  );
+
   const connectionState = mode === "serial" ? serial.connectionState : wireless.connectionState;
   const deviceLabel = mode === "serial" ? formatSerialLabel(serial.port) : wireless.host;
   const isSupported = mode === "serial" ? serial.isSupported : true;
   const supportsFlashWizard = mode === "serial";
+  const supportsFileOps = mode === "serial";
 
   const value = useMemo<DeviceContextValue>(
     () => ({
@@ -206,6 +260,7 @@ export function DeviceProvider({ children }: { children: ReactNode }) {
       connectionState,
       deviceLabel,
       supportsFlashWizard,
+      supportsFileOps,
       connectSerial,
       connectWireless,
       disconnect,
@@ -213,6 +268,9 @@ export function DeviceProvider({ children }: { children: ReactNode }) {
       restoreStats,
       flash,
       uploadFile,
+      listFiles,
+      moveFile,
+      makeDirectory,
       log,
       logLines: lines,
       clearLog: clear,
@@ -227,11 +285,15 @@ export function DeviceProvider({ children }: { children: ReactNode }) {
       disconnect,
       flash,
       isSupported,
+      listFiles,
       lines,
       log,
+      makeDirectory,
       mode,
+      moveFile,
       restoreStats,
       setMode,
+      supportsFileOps,
       supportsFlashWizard,
       uploadFile,
     ],

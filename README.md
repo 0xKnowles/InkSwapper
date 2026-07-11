@@ -20,6 +20,20 @@ lets you design and upload custom sleep-screen artwork over USB or Wi-Fi.
   or X4 (480×800) portrait panel, dither it (grayscale or 1-bit
   Floyd–Steinberg), and upload the resulting BMP to `/sleep` on the device.
   Works over **USB Serial or Wireless**.
+- **Library** — add an OPDS catalog (name, URL, optional Basic-auth
+  credentials), browse it (navigation and search, verified live against
+  Project Gutenberg's real feed), and send a book straight to `/Books` on
+  the device. Works over **USB Serial or Wireless**. If a given catalog's
+  book-file host doesn't send CORS headers (common — the feed itself often
+  does, the file host often doesn't), automatic sending fails cleanly with
+  a manual "↗" download link plus a local-file upload fallback underneath.
+- **Clean Up** — scans a flat `/Books` folder and groups loose files into
+  per-author subfolders, guessing the author from the filename (`Title -
+  Author`, `Author - Title`, `Author, Last - Title`, or Standard
+  Ebooks-style `author-slug_title-slug`). This is a heuristic, not real
+  metadata extraction, and will occasionally guess wrong — review and edit
+  every author before committing the plan. **USB Serial only** — see
+  below.
 
 Every phase logs timestamped status lines to the live terminal pane, which
 collapses to a single line on mobile.
@@ -48,11 +62,18 @@ such as uxjulia/CrossInk), not guessed:
   at all, which is exactly why the real firmware's own upload workflow uses
   one instead of a REST call.
 
-  **Why the Flash OS wizard is Serial-only:** the real web server has no
-  endpoint for a browser to push a firmware image — OTA is device-initiated
-  (it polls an update server itself) — and no stats export/import endpoint
-  either. Wireless mode is genuinely limited to file uploads today; the app
-  says so upfront rather than failing silently mid-wizard.
+  **Why the Flash OS wizard and Clean Up are Serial-only:** the real web
+  server has no endpoint for a browser to push a firmware image — OTA is
+  device-initiated (it polls an update server itself) — and no stats
+  export/import endpoint either. Clean Up needs to *read* the current
+  `/Books` listing first (`GET /api/files`), which hits the same CORS wall
+  as every other read, and there's no WebSocket equivalent for listing or
+  moving files (upload-only). Wireless mode is genuinely limited to file
+  uploads today; the app says so upfront rather than failing silently
+  mid-flow. CrossSwap's own serial commands for these (`CMD_LIST_FILES`,
+  `CMD_MOVE_FILE`, `CMD_MKDIR`, alongside the existing `CMD_EXPORT_STATS` /
+  `CMD_IMPORT_STATS` / `CMD_UPLOAD_*`) are its own convention, not verified
+  against real firmware — support is fork-dependent.
 
   **Mixed content note:** a CrossSwap page loaded over `https://` cannot
   open a plain `ws://` connection to a device on your LAN — load CrossSwap

@@ -4,12 +4,14 @@ import { getSerialUnsupportedReason } from "../lib/browserSupport";
 import { Terminal } from "./Terminal";
 import "./AppShell.css";
 
-export type Section = "dashboard" | "flash-os" | "sleep-screens";
+export type Section = "dashboard" | "flash-os" | "sleep-screens" | "library" | "cleanup";
 
 const NAV_ITEMS: { id: Section; label: string; hint: string }[] = [
   { id: "dashboard", label: "Dashboard", hint: "Overview & device status" },
   { id: "flash-os", label: "Flash OS", hint: "Swap firmware in 3 steps" },
   { id: "sleep-screens", label: "Sleep Screens", hint: "Design & upload artwork" },
+  { id: "library", label: "Library", hint: "Browse OPDS & send books" },
+  { id: "cleanup", label: "Clean Up", hint: "Organize /Books by author" },
 ];
 
 interface AppShellProps {
