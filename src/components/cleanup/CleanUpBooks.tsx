@@ -8,7 +8,7 @@ const BOOKS_DIR = "/Books";
 type ItemStatus = "pending" | "moving" | "done" | "error";
 
 export function CleanUpBooks() {
-  const { supportsFileOps, listFiles, moveFile, makeDirectory, log } = useDevice();
+  const { mode, listFiles, moveFile, makeDirectory, log } = useDevice();
 
   const [isScanning, setIsScanning] = useState(false);
   const [scanError, setScanError] = useState<string | null>(null);
@@ -97,23 +97,6 @@ export function CleanUpBooks() {
     }
   }, [log, makeDirectory, moveFile, plan]);
 
-  if (!supportsFileOps) {
-    return (
-      <div className="cleanup section-panel">
-        <h2 className="section-heading">Clean Up</h2>
-        <p className="section-subheading">Organize a flat /Books folder into per-author subfolders.</p>
-        <div className="cleanup__unsupported">
-          <p>
-            Clean Up needs <strong>USB Serial</strong>. Reading the device's current file listing requires CORS
-            support the real firmware's HTTP API doesn't send, and there's no WebSocket equivalent for listing or
-            moving files — that channel is upload-only.
-          </p>
-          <p>Switch to USB Serial in the sidebar to use this tool.</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="cleanup section-panel">
       <h2 className="section-heading">Clean Up</h2>
@@ -121,6 +104,14 @@ export function CleanUpBooks() {
         Scans /Books for loose files and groups them into per-author folders. Author names are guessed from
         filenames, not real book metadata — review and correct them before organizing.
       </p>
+
+      {mode === "wireless" && (
+        <p className="cleanup__hint">
+          Over Wireless this needs the device firmware to send CORS headers for /api/files, /move, and /mkdir —
+          stock CrossPoint firmware doesn't. If Scan fails with a network/CORS-shaped error, use USB Serial instead
+          (or apply the crossink-cors.patch and reflash).
+        </p>
+      )}
 
       <button type="button" className="button button--primary" disabled={isScanning || isOrganizing} onClick={handleScan}>
         {isScanning ? "Scanning…" : "Scan /Books"}

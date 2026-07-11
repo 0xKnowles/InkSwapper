@@ -33,10 +33,13 @@ export interface DeviceContextValue {
    */
   supportsFlashWizard: boolean;
   /**
-   * False in wireless mode: reading a directory listing needs the same
-   * CORS support the real firmware's HTTP API doesn't send, and there's no
-   * WebSocket equivalent for listing/moving files (upload-only). Clean Up
-   * needs USB serial.
+   * Always true: file ops work over USB Serial via CrossSwap's own
+   * commands, and over Wireless via the device's real /api/files, /move,
+   * /mkdir endpoints IF the firmware sends CORS headers for them (stock
+   * CrossPointWebServer.cpp doesn't — see crossink-cors.patch). Wireless
+   * attempts surface a clear CORS-shaped error rather than being blocked
+   * up front, since we can't know in advance whether a given device has
+   * been patched.
    */
   supportsFileOps: boolean;
 
@@ -205,11 +208,9 @@ export function DeviceProvider({ children }: { children: ReactNode }) {
 
   const listFiles = useCallback(
     async (path: string): Promise<DeviceFileEntry[]> => {
-      if (mode !== "serial") {
-        throw new Error(
-          "Listing device files isn't available over Wireless: CrossPoint's file API needs CORS support the real " +
-            "firmware doesn't send, and there's no WebSocket equivalent for reading a directory listing. Use USB Serial.",
-        );
+      if (mode === "wireless") {
+        log(`GET /api/files?path=${path}`, "command");
+        return wireless.listFiles(path);
       }
       log(`> CMD_LIST_FILES:${path}`, "command");
       const response = await serial.sendCommand(`CMD_LIST_FILES:${path}\n`, { idleMs: 600, timeoutMs: 20000 });
@@ -221,36 +222,38 @@ export function DeviceProvider({ children }: { children: ReactNode }) {
         throw new Error(`Device returned an unexpected response to CMD_LIST_FILES: ${response.slice(0, 200)}`);
       }
     },
-    [log, mode, serial],
+    [log, mode, serial, wireless],
   );
 
   const moveFile = useCallback(
     async (from: string, to: string): Promise<string> => {
-      if (mode !== "serial") {
-        throw new Error("Moving device files isn't available over Wireless. Use USB Serial.");
+      if (mode === "wireless") {
+        log(`POST /move (${from})`, "command");
+        return wireless.moveFile(from, to);
       }
       log(`> CMD_MOVE_FILE:${from}:${to}`, "command");
       return serial.sendCommand(`CMD_MOVE_FILE:${from}:${to}\n`, { idleMs: 500, timeoutMs: 10000 });
     },
-    [log, mode, serial],
+    [log, mode, serial, wireless],
   );
 
   const makeDirectory = useCallback(
     async (path: string): Promise<string> => {
-      if (mode !== "serial") {
-        throw new Error("Creating device folders isn't available over Wireless. Use USB Serial.");
+      if (mode === "wireless") {
+        log(`POST /mkdir (${path})`, "command");
+        return wireless.makeDirectory(path);
       }
       log(`> CMD_MKDIR:${path}`, "command");
       return serial.sendCommand(`CMD_MKDIR:${path}\n`, { idleMs: 500, timeoutMs: 10000 });
     },
-    [log, mode, serial],
+    [log, mode, serial, wireless],
   );
 
   const connectionState = mode === "serial" ? serial.connectionState : wireless.connectionState;
   const deviceLabel = mode === "serial" ? formatSerialLabel(serial.port) : wireless.host;
   const isSupported = mode === "serial" ? serial.isSupported : true;
   const supportsFlashWizard = mode === "serial";
-  const supportsFileOps = mode === "serial";
+  const supportsFileOps = true;
 
   const value = useMemo<DeviceContextValue>(
     () => ({

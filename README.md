@@ -32,8 +32,10 @@ lets you design and upload custom sleep-screen artwork over USB or Wi-Fi.
   Author`, `Author - Title`, `Author, Last - Title`, or Standard
   Ebooks-style `author-slug_title-slug`). This is a heuristic, not real
   metadata extraction, and will occasionally guess wrong — review and edit
-  every author before committing the plan. **USB Serial only** — see
-  below.
+  every author before committing the plan. Works over **USB Serial or
+  Wireless** — Wireless uses the device's real `/api/files`, `/move`, and
+  `/mkdir` endpoints, which only work if the firmware sends CORS headers
+  for them (see `crossink-cors.patch` below).
 
 Every phase logs timestamped status lines to the live terminal pane, which
 collapses to a single line on mobile.
@@ -62,22 +64,37 @@ such as uxjulia/CrossInk), not guessed:
   at all, which is exactly why the real firmware's own upload workflow uses
   one instead of a REST call.
 
-  **Why the Flash OS wizard and Clean Up are Serial-only:** the real web
+  **Why the Flash OS wizard is Serial-only, unconditionally:** the real web
   server has no endpoint for a browser to push a firmware image — OTA is
   device-initiated (it polls an update server itself) — and no stats
-  export/import endpoint either. Clean Up needs to *read* the current
-  `/Books` listing first (`GET /api/files`), which hits the same CORS wall
-  as every other read, and there's no WebSocket equivalent for listing or
-  moving files (upload-only). Wireless mode is genuinely limited to file
-  uploads today; the app says so upfront rather than failing silently
-  mid-flow. CrossSwap's own serial commands for these (`CMD_LIST_FILES`,
-  `CMD_MOVE_FILE`, `CMD_MKDIR`, alongside the existing `CMD_EXPORT_STATS` /
-  `CMD_IMPORT_STATS` / `CMD_UPLOAD_*`) are its own convention, not verified
-  against real firmware — support is fork-dependent.
+  export/import endpoint either, regardless of CORS. No firmware patch
+  changes this; it would need new endpoints, not just new headers.
+
+  **[`patches/crossink-cors.patch`](patches/crossink-cors.patch):** a
+  4-line patch adding `Access-Control-Allow-Origin: *` to CrossInk's
+  `handleStatus`, `handleFileListData`, `handleCreateFolder`, and
+  `handleMove` — the handlers behind `/api/status`, `/api/files`,
+  `/mkdir`, `/move`. Apply it to a CrossInk checkout (`patch -p1 <
+  patches/crossink-cors.patch` from the repo root), rebuild, and reflash
+  to make Clean Up work over Wireless using the device's real file API.
+  GET and form-urlencoded POST are CORS "simple requests," so no OPTIONS/
+  preflight handling is needed — just the header.
+
+  **A note on the serial `CMD_*` protocol:** real-hardware testing found
+  that stock CrossInk firmware does not implement CrossSwap's serial
+  commands (`CMD_LIST_FILES` returned an empty response) — unsurprising
+  given CrossInk's architecture is entirely Wi-Fi/web based, with no
+  evidence of a custom UART command listener in the running app. Treat
+  `CMD_EXPORT_STATS` / `CMD_IMPORT_STATS` / `CMD_UPLOAD_*` /
+  `CMD_LIST_FILES` / `CMD_MOVE_FILE` / `CMD_MKDIR` as CrossSwap's own,
+  unverified convention for USB Serial mode — it may not work on your
+  fork either. Wireless, plus the CORS patch where relevant, is the more
+  reliably real path today.
 
   **Mixed content note:** a CrossSwap page loaded over `https://` cannot
-  open a plain `ws://` connection to a device on your LAN — load CrossSwap
-  over `http://` or `localhost` to use Wireless mode.
+  open a plain `ws://` connection, or `fetch()` a plain `http://` URL, on
+  your LAN — load CrossSwap over `http://` or `localhost` to use Wireless
+  mode.
 
 ## Firmware catalog
 

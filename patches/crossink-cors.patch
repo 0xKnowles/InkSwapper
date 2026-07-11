@@ -1,0 +1,38 @@
+--- a/src/network/CrossPointWebServer.cpp
++++ b/src/network/CrossPointWebServer.cpp
+@@ -422,6 +422,8 @@
+ }
+ 
+ void CrossPointWebServer::handleStatus() const {
++  // Allow cross-origin requests (e.g. from companion web apps like CrossSwap)
++  server->sendHeader("Access-Control-Allow-Origin", "*");
+   // Get correct IP based on AP vs STA mode
+   const String ipAddr = apMode ? WiFi.softAPIP().toString() : WiFi.localIP().toString();
+ 
+@@ -522,6 +524,8 @@
+ }
+ 
+ void CrossPointWebServer::handleFileListData() const {
++  // Allow cross-origin requests (e.g. from companion web apps like CrossSwap)
++  server->sendHeader("Access-Control-Allow-Origin", "*");
+   // Get current path from query string (default to root)
+   String currentPath = "/";
+   if (server->hasArg("path")) {
+@@ -822,6 +826,8 @@
+ }
+ 
+ void CrossPointWebServer::handleCreateFolder() const {
++  // Allow cross-origin requests (e.g. from companion web apps like CrossSwap)
++  server->sendHeader("Access-Control-Allow-Origin", "*");
+   // Get folder name from form data
+   if (!server->hasArg("name")) {
+     server->send(400, "text/plain", "Missing folder name");
+@@ -950,6 +956,8 @@
+ }
+ 
+ void CrossPointWebServer::handleMove() const {
++  // Allow cross-origin requests (e.g. from companion web apps like CrossSwap)
++  server->sendHeader("Access-Control-Allow-Origin", "*");
+   if (!server->hasArg("path") || !server->hasArg("dest")) {
+     server->send(400, "text/plain", "Missing path or destination");
+     return;
